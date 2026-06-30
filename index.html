@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student List</title>
+</head>
+<body>
+
+<h3><i>*দারুস্ সূন্নাহ এশায়তুলউলুম নূরানী মাদ্রাসা*</i></h3>
+
+<button id="5" style="color:green;"> হিসাব </button>
+<br><br>
+
+<input id="6" placeholder="ছাত্র ছাত্রীর নাম">
+<button id="7" style="background-color:green">submit</button>
+
+<h1 id="status" style="color:red">
+    <marquee>
+        <i>
+        সকল ছাত্র অভিভাবকদের জানানো যাচ্ছে যে,
+        প্রত্যেক মাসের ০৫ তারিখের মধ্যে বেতন পরিশোধ করিতে হইবে।
+        অনুরোধক্রমে মুফতি সাইফুল হক্
+        </i>
+    </marquee>
+</h1>
+
+<input id="4" type="date">
+<input id="3" placeholder="TK" required>
+
+<ul id="8"></ul>
+
+
+    
+    
+    
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDhdamD0ApIaUeW0km2uSA7ksmGJO8f5Po",
+  authDomain: "madrasa-fee-app.firebaseapp.com",
+  projectId: "madrasa-fee-app",
+  storageBucket: "madrasa-fee-app.firebasestorage.app",
+  messagingSenderId: "1011327270340",
+  appId: "1:1011327270340:web:b51a08befa3aafce4a7891",
+  measurementId: "G-ZT4457XDKS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager()
+  })
+});
+
+// ... বাকি কোড
+    
+    
+    
+    
+    
+
+// Password
+//while (true) {
+ //   let password = prompt("password");
+
+ //   if (password === "1234") {
+//        alert("write");
+ //       break;
+//    } else {
+ //       alert("wrong");
+//    }
+//}
+
+// Load data
+let phons = [];
+
+async function loadStudents() {
+
+    const cachedData = localStorage.getItem("students");
+    if (cachedData) {
+        try {
+            phons = JSON.parse(cachedData);
+            showStudents();
+        } catch (e) {
+            phons = [];
+            showStudents();
+        }
+    } else {
+        phons = [];
+        showStudents();
+    }
+
+    if (navigator.onLine) {
+        try {
+            const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            const newData = [];
+            querySnapshot.forEach((doc) => {
+                newData.push({ id: doc.id, ...doc.data() });
+            });
+            if (newData.length > 0) {
+                phons = newData;
+                localStorage.setItem("students", JSON.stringify(phons));
+                showStudents();
+            }
+        } catch (e) {
+            console.log("Firestore এরর, ক্যাশে থেকে দেখানো হচ্ছে");
+        }
+    }
+}
+
+// Show list
+function showStudents() {
+
+    document.getElementById("8").innerHTML = "";
+
+    phons.forEach(function(item) {
+
+        let li = document.createElement("li");
+
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+
+        if (item.done) {
+            checkbox.checked = true;
+            checkbox.disabled = true;
+            li.style.color = "green";
+        }
+
+        checkbox.onchange = async function() {
+            
+            
+            while (true) {
+    let password = prompt("password");
+
+    if (password === "1234") {
+        alert("write");
+        break;
+    } else {
+        alert("wrong");
+    }
+}
+            
+            
+
+            if (this.checked) {
+
+                item.done = true;
+
+await updateDoc(doc(db, "students", item.id), {
+    done: true
+});
+
+await loadStudents();
+            }
+        };
+
+        li.appendChild(checkbox);
+        li.append(" " + item.name);
+
+        document.getElementById("8").appendChild(li);
+    });
+}
+
+loadStudents();
+
+// Submit
+document.getElementById("7").onclick = async function() {
+    
+    // পাসওয়ার্ড চেক (যদি রাখতে চান)
+    while(true) {
+        let password = prompt("password");
+        if(password === "12345") {
+            alert("wright");
+            break;
+        } else {
+            alert("wrong");
+        }
+    }
+
+    let name = document.getElementById("6").value;
+    let date = document.getElementById("4").value;
+    let tk = document.getElementById("3").value;
+
+    // খালি ইনপুট চেক
+    if (!name || !date || !tk) {
+        alert("সব ঘর পূরণ করুন");
+        return;
+    }
+
+    // ১. নতুন ডাটা বানান
+    const newItem = {
+        id: 'local_' + Date.now(), // অফলাইনের জন্য টেম্পোরারি আইডি
+        name: name,
+        date: date,
+        tk: tk,
+        done: false,
+        createdAt: Date.now()
+    };
+
+    // ২. আগের ডাটার সাথে যোগ করুন এবং localStorage-এ সেভ করুন (অফলাইনেই কাজ করবে)
+    phons.unshift(newItem); // নতুন ডাটা লিস্টের উপরে যোগ করুন
+    localStorage.setItem("students", JSON.stringify(phons));
+    showStudents(); // সঙ্গে সঙ্গে লিস্টে দেখান
+
+    // ৩. এখন অনলাইন থাকলে ফায়ারবেসেও যোগ করুন
+    try {
+        await addDoc(collection(db, "students"), {
+            name: name,
+            date: date,
+            tk: tk,
+            done: false,
+            createdAt: Date.now()
+        });
+        // ফায়ারবেসে সফল হলে তাজা ডাটা লোড করুন (আসল আইডি পেতে)
+        await loadStudents();
+    } catch (e) {
+        // অফলাইনে Error এলেও কিছু যায় আসে না, কারণ ডাটা localStorage-এ সেভ হয়ে গেছে।
+        console.log("অফলাইন মোডে ডাটা সংরক্ষিত হয়েছে (নেট আসলে সিঙ্ক হবে)");
+    }
+
+    // ইনপুট ফিল্ড খালি করুন
+    document.getElementById("6").value = "";
+    document.getElementById("3").value = "";
+};
+
+// COM button
+document.getElementById("5").onclick = function() {
+    
+    
+    while (true) {
+    let password = prompt("password");
+
+    if (password === "1234") {
+        alert("write");
+        break;
+    } else {
+        alert("wrong");
+    }
+}
+    
+
+    let text = "";
+
+    phons.forEach(function(item) {
+
+        text += item.name + " | " +
+                item.date + " | " +
+                item.tk + " টাকা\n";
+    });
+
+    alert(text);
+};
+
+
+
+//localStorage.removeItem("students");
+
+</script>
+
+</body>
+</html>
