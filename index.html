@@ -73,10 +73,6 @@ const db = initializeFirestore(app, {
     
     
     
-    document.getElementById("openSystem").onclick = function () {
-    document.getElementById("systemBox").style.display = "block";
-    this.style.display = "none";
-};
     
 
 // Password
@@ -281,6 +277,13 @@ if ("serviceWorker" in navigator) {
 }
    
 
+document.getElementById("openSystem").onclick = function () {
+    document.getElementById("systemBox").style.display = "block";
+    this.style.display = "none";
+};
+    
+
+    
 </script>
 
 </body>
