@@ -6,7 +6,11 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+<button id="openSystem">
+    📚 সকল তথ্য জানতে এখানে ক্লিক করুন
+</button>
 
+<div id="systemBox" style="display:none;">
 <h3><i>*দারুস্ সূন্নাহ এশায়তুলউলুম নূরানী মাদ্রাসা*</i></h3>
 
 <button id="5" style="color:green;"> হিসাব </button>
@@ -31,7 +35,7 @@
 <ul id="8"></ul>
 
 
-    
+    </div>
     
     
 <script type="module">
@@ -69,7 +73,10 @@ const db = initializeFirestore(app, {
     
     
     
-    
+    document.getElementById("openSystem").onclick = function () {
+    document.getElementById("systemBox").style.display = "block";
+    this.style.display = "none";
+};
     
 
 // Password
