@@ -1,11 +1,16 @@
 {
+  "id": "/madrasa-fee-app/",
   "name": "Madrasa Fee App",
   "short_name": "Fee App",
   "description": "মাদ্রাসার ছাত্রদের ফি ব্যবস্থাপনা অ্যাপ",
-  "start_url": "./",
+  "start_url": "/madrasa-fee-app/",
+  "scope": "/madrasa-fee-app/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#008000",
+  "prefer_related_applications": false,
+  "categories": ["education"],
   "icons": [
     {
       "src": "icon-192.png",
