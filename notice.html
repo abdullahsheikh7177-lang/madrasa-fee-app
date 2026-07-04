@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>নোটিশ</title>
 </head>
+
 <body>
 
 <h2>📢 নতুন নোটিশ</h2>
@@ -18,6 +19,86 @@ placeholder="এখানে নোটিশ লিখুন"></textarea>
 <hr>
 
 <div id="noticeList"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+initializeFirestore,
+persistentLocalCache,
+persistentSingleTabManager,
+collection,
+addDoc,
+getDocs,
+query,
+orderBy
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDhdamD0ApIaUeW0km2uSA7ksmGJO8f5Po",
+  authDomain: "madrasa-fee-app.firebaseapp.com",
+  projectId: "madrasa-fee-app",
+  storageBucket: "madrasa-fee-app.firebasestorage.app",
+  messagingSenderId: "1011327270340",
+  appId: "1:1011327270340:web:b51a08befa3aafce4a7891",
+  measurementId: "G-ZT4457XDKS"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = initializeFirestore(app,{
+  localCache:persistentLocalCache({
+    tabManager:persistentSingleTabManager()
+  })
+});
+
+async function loadNotice(){
+
+    const list=document.getElementById("noticeList");
+    list.innerHTML="";
+
+    const q=query(collection(db,"notice"),orderBy("createdAt","desc"));
+
+    const snapshot=await getDocs(q);
+
+    snapshot.forEach(doc=>{
+
+        list.innerHTML+=`
+        <div style="border:1px solid #ccc;padding:10px;margin:10px;border-radius:5px;">
+        📢 ${doc.data().text}
+        </div>
+        `;
+
+    });
+
+}
+
+loadNotice();
+
+document.getElementById("submitNotice").onclick=async function(){
+
+    let text=document.getElementById("noticeInput").value.trim();
+
+    if(text==""){
+        alert("নোটিশ লিখুন");
+        return;
+    }
+
+    await addDoc(collection(db,"notice"),{
+
+        text:text,
+        createdAt:Date.now()
+
+    });
+
+    document.getElementById("noticeInput").value="";
+
+    loadNotice();
+
+};
+
+</script>
 
 </body>
 </html>
