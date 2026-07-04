@@ -53,50 +53,6 @@ const db = initializeFirestore(app,{
   })
 });
 
-async function loadNotice(){
-
-    const list=document.getElementById("noticeList");
-    list.innerHTML="";
-
-    const q=query(collection(db,"notice"),orderBy("createdAt","desc"));
-
-    const snapshot=await getDocs(q);
-
-    snapshot.forEach(doc=>{
-
-        list.innerHTML+=`
-        <div style="border:1px solid #ccc;padding:10px;margin:10px;border-radius:5px;">
-        📢 ${doc.data().text}
-        </div>
-        `;
-
-    });
-
-}
-
-loadNotice();
-
-document.getElementById("submitNotice").onclick=async function(){
-
-    let text=document.getElementById("noticeInput").value.trim();
-
-    if(text==""){
-        alert("নোটিশ লিখুন");
-        return;
-    }
-
-    await addDoc(collection(db,"notice"),{
-
-        text:text,
-        createdAt:Date.now()
-
-    });
-
-    document.getElementById("noticeInput").value="";
-
-    loadNotice();
-
-};
 
 
 
