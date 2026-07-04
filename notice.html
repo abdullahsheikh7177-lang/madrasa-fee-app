@@ -98,6 +98,120 @@ document.getElementById("submitNotice").onclick=async function(){
 
 };
 
+
+
+let notices = [];
+
+// নোটিশ লোড
+async function loadNotice() {
+
+    // আগে localStorage থেকে দেখাবে
+    const cache = localStorage.getItem("notice");
+
+    if (cache) {
+        notices = JSON.parse(cache);
+        showNotice();
+    }
+
+    // তারপর Firebase থেকে আপডেট করবে
+    if (navigator.onLine) {
+
+        const q = query(collection(db, "notice"), orderBy("createdAt", "desc"));
+
+        const snapshot = await getDocs(q);
+
+        notices = [];
+
+        snapshot.forEach((doc) => {
+
+            notices.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+        localStorage.setItem("notice", JSON.stringify(notices));
+
+        showNotice();
+
+    }
+
+}
+
+// নোটিশ দেখাবে
+function showNotice() {
+
+    let html = "";
+
+    notices.forEach(function(item){
+
+        html += `
+        <div style="border:1px solid #999;padding:10px;margin:10px;border-radius:8px;">
+        📢 ${item.text}
+        </div>
+        `;
+
+    });
+
+    document.getElementById("noticeList").innerHTML = html;
+
+}
+
+loadNotice();
+
+
+// Submit
+document.getElementById("submitNotice").onclick = async function(){
+
+    let text = document.getElementById("noticeInput").value.trim();
+
+    if(text==""){
+        alert("নোটিশ লিখুন");
+        return;
+    }
+
+    const newNotice = {
+
+        id:"local_"+Date.now(),
+
+        text:text,
+
+        createdAt:Date.now()
+
+    };
+
+    // আগে localStorage-এ সেভ
+    notices.unshift(newNotice);
+
+    localStorage.setItem("notice", JSON.stringify(notices));
+
+    showNotice();
+
+    // তারপর Firebase-এ সেভ
+    try{
+
+        await addDoc(collection(db,"notice"),{
+
+            text:text,
+
+            createdAt:Date.now()
+
+        });
+
+        await loadNotice();
+
+    }catch(e){
+
+        console.log("Offline Mode");
+
+    }
+
+    document.getElementById("noticeInput").value="";
+
+};
+  
+
 </script>
 
 </body>
