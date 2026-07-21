@@ -110,7 +110,9 @@ margin:10px;
 border-radius:8px;
 white-space: pre-wrap;
 ">
-📢 ${item.text}
+📢 ${item.text.replace(/\n/g, "<br>")}
+
+
 </div>
 `;
 
