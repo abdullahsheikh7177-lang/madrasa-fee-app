@@ -122,12 +122,14 @@ border-radius:8px;
 }
 
 loadNotice();
-alert(JSON.stringify(text));
+
 
 // Submit
 document.getElementById("submitNotice").onclick = async function(){
 
     let text = document.getElementById("noticeInput").value.trim();
+  
+  alert(JSON.stringify(text));
 
     if(text==""){
         alert("নোটিশ লিখুন");
