@@ -129,6 +129,12 @@ loadNotice();
 document.getElementById("submitNotice").onclick = async function(){
 
     let text = document.getElementById("noticeInput").value.trim();
+
+let text = document.getElementById("noticeInput").value;
+
+console.log(text);
+console.log(JSON.stringify(text));
+  
   
   alert(JSON.stringify(text));
 
