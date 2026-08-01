@@ -10,7 +10,7 @@
 <h2>📢 নতুন নোটিশ</h2>
 
 <textarea id="noticeInput" rows="5" cols="35"
-placeholder="এখানে নোটিশ লিখুন"></textarea>
+placeholder="এখানে নোটিশ লিখুন (| চিহ্ন দিয়ে লাইন ব্রেক করুন)"></textarea>
 
 <br><br>
 
@@ -53,54 +53,39 @@ const db = initializeFirestore(app,{
   })
 });
 
-
-
-
 let notices = [];
 
 // নোটিশ লোড
 async function loadNotice() {
-
-    // আগে localStorage থেকে দেখাবে
     const cache = localStorage.getItem("notice");
-
     if (cache) {
         notices = JSON.parse(cache);
         showNotice();
     }
-
-    // তারপর Firebase থেকে আপডেট করবে
     if (navigator.onLine) {
-
         const q = query(collection(db, "notice"), orderBy("createdAt", "desc"));
-
         const snapshot = await getDocs(q);
-
         notices = [];
-
         snapshot.forEach((doc) => {
-
             notices.push({
                 id: doc.id,
                 ...doc.data()
             });
-
         });
-
         localStorage.setItem("notice", JSON.stringify(notices));
-
         showNotice();
-
     }
-
 }
 
-// নোটিশ দেখাবে
-
+// নোটিশ দেখাবে (| চিহ্নকে লাইন ব্রেক হিসেবে)
 function showNotice() {
     let html = "";
     notices.forEach(function(item) {
-        let text = item.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        let text = item.text;
+        // আগে \r\n, \r, \n সবকটি \n-এ কনভার্ট
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        // এবার | চিহ্নকে \n-এ কনভার্ট
+        text = text.replace(/\|/g, '\n');
         let lines = text.split('\n');
         let formattedText = lines.join('<br>');
         html += `
@@ -112,71 +97,48 @@ function showNotice() {
     document.getElementById("noticeList").innerHTML = html;
 }
 
-  
-
 loadNotice();
-
 
 // Submit
 document.getElementById("submitNotice").onclick = async function(){
 
-    
+    let text = document.getElementById("noticeInput").value;
+    // প্রথমে \r\n, \r -> \n
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // তারপর | চিহ্নকে \n-এ কনভার্ট
+    text = text.replace(/\|/g, '\n');
 
-let text = document.getElementById("noticeInput").value;
-text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  
+    console.log(text);
+    console.log(JSON.stringify(text));
+    alert(JSON.stringify(text));
 
-console.log(text);
-console.log(JSON.stringify(text));
-  
-  
-  alert(JSON.stringify(text));
-
-    if(text==""){
+    if(text == ""){
         alert("নোটিশ লিখুন");
         return;
     }
 
     const newNotice = {
-
-        id:"local_"+Date.now(),
-
-        text:text,
-
-        createdAt:Date.now()
-
+        id: "local_" + Date.now(),
+        text: text,
+        createdAt: Date.now()
     };
 
-    // আগে localStorage-এ সেভ
     notices.unshift(newNotice);
-
     localStorage.setItem("notice", JSON.stringify(notices));
-
     showNotice();
 
-    // তারপর Firebase-এ সেভ
-    try{
-
-        await addDoc(collection(db,"notice"),{
-
-            text:text,
-
-            createdAt:Date.now()
-
+    try {
+        await addDoc(collection(db, "notice"), {
+            text: text,
+            createdAt: Date.now()
         });
-
         await loadNotice();
-
-    }catch(e){
-
+    } catch(e) {
         console.log("Offline Mode");
-
     }
 
-    document.getElementById("noticeInput").value="";
-
+    document.getElementById("noticeInput").value = "";
 };
-  
 
 </script>
 
