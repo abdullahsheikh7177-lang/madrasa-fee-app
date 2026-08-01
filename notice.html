@@ -5,20 +5,57 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>নতুন নোটিশ</title>
+  <title>নোটিশ (মেসেজ বক্স)</title>
+  <style>
+    /* মেসেজ বক্সের স্টাইল */
+    #messageBox {
+      border: 2px solid #999;
+      padding: 12px;
+      min-height: 150px;
+      width: 90%;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 18px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    /* প্লেসহোল্ডার হিসেবে দেখাবে */
+    #messageBox:empty:before {
+      content: "এখানে নোটিশ লিখুন (Enter দিয়ে নতুন লাইন)";
+      color: #aaa;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    #addLineBtn {
+      background: #28a745;
+    }
+    .notice-item {
+      border: 1px solid #999;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+  </style>
 </head>
 <body>
 
 <h2>📢 নতুন নোটিশ</h2>
 
-<p>প্রতিটি লাইন আলাদা বক্সে লিখুন:</p>
+<!-- এটাই মেসেজ বক্স (textarea-এর বিকল্প) -->
+<div id="messageBox" contenteditable="true"></div>
 
-<div id="inputContainer">
-  <input type="text" class="lineInput" placeholder="লাইন ১" style="width:80%; margin:5px 0;">
-</div>
+<br>
 
-<button id="addLineBtn">➕ আরও লাইন যোগ করুন</button>
-<br><br>
 <button id="submitNotice">✅ Submit</button>
 
 <hr>
@@ -57,9 +94,9 @@ const db = initializeFirestore(app, {
 
 let notices = [];
 
-// লোকাল ক্যাশ থেকে লোড
+// নোটিশ লোড
 async function loadNotice() {
-  const cache = localStorage.getItem("notice2");
+  const cache = localStorage.getItem("notice3");
   if (cache) {
     notices = JSON.parse(cache);
     showNotice();
@@ -71,11 +108,12 @@ async function loadNotice() {
     snapshot.forEach((doc) => {
       notices.push({ id: doc.id, ...doc.data() });
     });
-    localStorage.setItem("notice2", JSON.stringify(notices));
+    localStorage.setItem("notice3", JSON.stringify(notices));
     showNotice();
   }
 }
 
+// নোটিশ দেখানো
 function showNotice() {
   let html = "";
   notices.forEach(function(item) {
@@ -83,7 +121,7 @@ function showNotice() {
     let lines = text.split('\n');
     let formattedText = lines.join('<br>');
     html += `
-<div style="border:1px solid #999; padding:10px; margin:10px; border-radius:8px;">
+<div class="notice-item">
 📢 ${formattedText}
 </div>
 `;
@@ -93,38 +131,21 @@ function showNotice() {
 
 loadNotice();
 
-// নতুন লাইন যোগ
-document.getElementById("addLineBtn").onclick = function() {
-  let container = document.getElementById("inputContainer");
-  let newInput = document.createElement("input");
-  newInput.type = "text";
-  newInput.className = "lineInput";
-  newInput.placeholder = "লাইন " + (container.children.length + 1);
-  newInput.style.width = "80%";
-  newInput.style.margin = "5px 0";
-  container.appendChild(newInput);
-};
-
 // Submit
 document.getElementById("submitNotice").onclick = async function() {
-  let inputs = document.querySelectorAll(".lineInput");
-  let lines = [];
-  inputs.forEach(function(inp) {
-    let val = inp.value.trim();
-    if (val !== "") lines.push(val);
-  });
+  // মেসেজ বক্স থেকে টেক্সট নেওয়া (innerText নতুন লাইনগুলোকে \n-এ রাখে)
+  let box = document.getElementById("messageBox");
+  let text = box.innerText.trim();
 
-  if (lines.length === 0) {
-    alert("কমপক্ষে একটি লাইন লিখুন");
-    return;
-  }
-
-  let text = lines.join("\n");
-
-  // ডিবাগ
+  // ডিবাগ করার জন্য
   console.log(text);
   console.log(JSON.stringify(text));
   alert("✅ টেক্সট:\n" + JSON.stringify(text));
+
+  if (text === "") {
+    alert("দয়া করে কিছু লিখুন");
+    return;
+  }
 
   const newNotice = {
     id: "local_" + Date.now(),
@@ -133,7 +154,7 @@ document.getElementById("submitNotice").onclick = async function() {
   };
 
   notices.unshift(newNotice);
-  localStorage.setItem("notice2", JSON.stringify(notices));
+  localStorage.setItem("notice3", JSON.stringify(notices));
   showNotice();
 
   try {
@@ -146,12 +167,10 @@ document.getElementById("submitNotice").onclick = async function() {
     console.log("Offline Mode");
   }
 
-  // ফিল্ড খালি
-  inputs.forEach(inp => inp.value = "");
-  document.getElementById("inputContainer").innerHTML = `
-    <input type="text" class="lineInput" placeholder="লাইন ১" style="width:80%; margin:5px 0;">
-  `;
+  // বক্স খালি করা
+  box.innerHTML = "";
 };
+
 </script>
 
 </body>
