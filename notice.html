@@ -96,32 +96,23 @@ async function loadNotice() {
 }
 
 // নোটিশ দেখাবে
+
 function showNotice() {
-
     let html = "";
-
-    notices.forEach(function(item){
-
+    notices.forEach(function(item) {
+        let text = item.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        let lines = text.split('\n');
+        let formattedText = lines.join('<br>');
         html += `
-<div style="
-border:1px solid #999;
-padding:10px;
-margin:10px;
-border-radius:8px;
-white-space:pre-wrap;
-">
-📢 ${item.text.replace(/\n/g, '<br>')}
-
-
-
+<div style="border:1px solid #999; padding:10px; margin:10px; border-radius:8px;">
+📢 ${formattedText}
 </div>
 `;
-
     });
-
     document.getElementById("noticeList").innerHTML = html;
-
 }
+
+  
 
 loadNotice();
 
