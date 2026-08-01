@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>নোটিশ</title>
+  <title>নতুন নোটিশ</title>
 </head>
 <body>
 
@@ -19,7 +19,7 @@
 
 <button id="addLineBtn">➕ আরও লাইন যোগ করুন</button>
 <br><br>
-<button id="submitNotice">Submit</button>
+<button id="submitNotice">✅ Submit</button>
 
 <hr>
 
@@ -57,8 +57,9 @@ const db = initializeFirestore(app, {
 
 let notices = [];
 
+// লোকাল ক্যাশ থেকে লোড
 async function loadNotice() {
-  const cache = localStorage.getItem("notice");
+  const cache = localStorage.getItem("notice2");
   if (cache) {
     notices = JSON.parse(cache);
     showNotice();
@@ -70,7 +71,7 @@ async function loadNotice() {
     snapshot.forEach((doc) => {
       notices.push({ id: doc.id, ...doc.data() });
     });
-    localStorage.setItem("notice", JSON.stringify(notices));
+    localStorage.setItem("notice2", JSON.stringify(notices));
     showNotice();
   }
 }
@@ -92,6 +93,7 @@ function showNotice() {
 
 loadNotice();
 
+// নতুন লাইন যোগ
 document.getElementById("addLineBtn").onclick = function() {
   let container = document.getElementById("inputContainer");
   let newInput = document.createElement("input");
@@ -103,13 +105,13 @@ document.getElementById("addLineBtn").onclick = function() {
   container.appendChild(newInput);
 };
 
+// Submit
 document.getElementById("submitNotice").onclick = async function() {
   let inputs = document.querySelectorAll(".lineInput");
   let lines = [];
   inputs.forEach(function(inp) {
-    if (inp.value.trim() !== "") {
-      lines.push(inp.value.trim());
-    }
+    let val = inp.value.trim();
+    if (val !== "") lines.push(val);
   });
 
   if (lines.length === 0) {
@@ -119,9 +121,10 @@ document.getElementById("submitNotice").onclick = async function() {
 
   let text = lines.join("\n");
 
+  // ডিবাগ
   console.log(text);
   console.log(JSON.stringify(text));
-  alert(JSON.stringify(text));
+  alert("✅ টেক্সট:\n" + JSON.stringify(text));
 
   const newNotice = {
     id: "local_" + Date.now(),
@@ -130,7 +133,7 @@ document.getElementById("submitNotice").onclick = async function() {
   };
 
   notices.unshift(newNotice);
-  localStorage.setItem("notice", JSON.stringify(notices));
+  localStorage.setItem("notice2", JSON.stringify(notices));
   showNotice();
 
   try {
@@ -143,7 +146,11 @@ document.getElementById("submitNotice").onclick = async function() {
     console.log("Offline Mode");
   }
 
+  // ফিল্ড খালি
   inputs.forEach(inp => inp.value = "");
+  document.getElementById("inputContainer").innerHTML = `
+    <input type="text" class="lineInput" placeholder="লাইন ১" style="width:80%; margin:5px 0;">
+  `;
 };
 </script>
 
