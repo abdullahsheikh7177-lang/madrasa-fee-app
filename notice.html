@@ -123,6 +123,8 @@ document.getElementById("submitNotice").onclick = async function(){
     
 
 let text = document.getElementById("noticeInput").value;
+text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
 
 console.log(text);
 console.log(JSON.stringify(text));
