@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>নোটিশ</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>নোটিশ</title>
 </head>
-
 <body>
 
 <h2>📢 নতুন নোটিশ</h2>
 
-<textarea id="noticeInput" rows="5" cols="35"
-placeholder="এখানে নোটিশ লিখুন (| চিহ্ন দিয়ে লাইন ব্রেক করুন)"></textarea>
+<p>প্রতিটি লাইন আলাদা বক্সে লিখুন:</p>
 
+<div id="inputContainer">
+  <input type="text" class="lineInput" placeholder="লাইন ১" style="width:80%; margin:5px 0;">
+</div>
+
+<button id="addLineBtn">➕ আরও লাইন যোগ করুন</button>
 <br><br>
-
 <button id="submitNotice">Submit</button>
 
 <hr>
@@ -21,18 +26,16 @@ placeholder="এখানে নোটিশ লিখুন (| চিহ্ন 
 <div id="noticeList"></div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-
 import {
-initializeFirestore,
-persistentLocalCache,
-persistentSingleTabManager,
-collection,
-addDoc,
-getDocs,
-query,
-orderBy
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -46,100 +49,102 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-const db = initializeFirestore(app,{
-  localCache:persistentLocalCache({
-    tabManager:persistentSingleTabManager()
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager()
   })
 });
 
 let notices = [];
 
-// নোটিশ লোড
 async function loadNotice() {
-    const cache = localStorage.getItem("notice");
-    if (cache) {
-        notices = JSON.parse(cache);
-        showNotice();
-    }
-    if (navigator.onLine) {
-        const q = query(collection(db, "notice"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        notices = [];
-        snapshot.forEach((doc) => {
-            notices.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        localStorage.setItem("notice", JSON.stringify(notices));
-        showNotice();
-    }
+  const cache = localStorage.getItem("notice");
+  if (cache) {
+    notices = JSON.parse(cache);
+    showNotice();
+  }
+  if (navigator.onLine) {
+    const q = query(collection(db, "notice"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    notices = [];
+    snapshot.forEach((doc) => {
+      notices.push({ id: doc.id, ...doc.data() });
+    });
+    localStorage.setItem("notice", JSON.stringify(notices));
+    showNotice();
+  }
 }
 
-// নোটিশ দেখাবে (| চিহ্নকে লাইন ব্রেক হিসেবে)
 function showNotice() {
-    let html = "";
-    notices.forEach(function(item) {
-        let text = item.text;
-        // আগে \r\n, \r, \n সবকটি \n-এ কনভার্ট
-        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        // এবার | চিহ্নকে \n-এ কনভার্ট
-        text = text.replace(/\|/g, '\n');
-        let lines = text.split('\n');
-        let formattedText = lines.join('<br>');
-        html += `
+  let html = "";
+  notices.forEach(function(item) {
+    let text = item.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    let lines = text.split('\n');
+    let formattedText = lines.join('<br>');
+    html += `
 <div style="border:1px solid #999; padding:10px; margin:10px; border-radius:8px;">
 📢 ${formattedText}
 </div>
 `;
-    });
-    document.getElementById("noticeList").innerHTML = html;
+  });
+  document.getElementById("noticeList").innerHTML = html;
 }
 
 loadNotice();
 
-// Submit
-document.getElementById("submitNotice").onclick = async function(){
-
-    let text = document.getElementById("noticeInput").value;
-    // প্রথমে \r\n, \r -> \n
-    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    // তারপর | চিহ্নকে \n-এ কনভার্ট
-    text = text.replace(/\|/g, '\n');
-
-    console.log(text);
-    console.log(JSON.stringify(text));
-    alert(JSON.stringify(text));
-
-    if(text == ""){
-        alert("নোটিশ লিখুন");
-        return;
-    }
-
-    const newNotice = {
-        id: "local_" + Date.now(),
-        text: text,
-        createdAt: Date.now()
-    };
-
-    notices.unshift(newNotice);
-    localStorage.setItem("notice", JSON.stringify(notices));
-    showNotice();
-
-    try {
-        await addDoc(collection(db, "notice"), {
-            text: text,
-            createdAt: Date.now()
-        });
-        await loadNotice();
-    } catch(e) {
-        console.log("Offline Mode");
-    }
-
-    document.getElementById("noticeInput").value = "";
+document.getElementById("addLineBtn").onclick = function() {
+  let container = document.getElementById("inputContainer");
+  let newInput = document.createElement("input");
+  newInput.type = "text";
+  newInput.className = "lineInput";
+  newInput.placeholder = "লাইন " + (container.children.length + 1);
+  newInput.style.width = "80%";
+  newInput.style.margin = "5px 0";
+  container.appendChild(newInput);
 };
 
+document.getElementById("submitNotice").onclick = async function() {
+  let inputs = document.querySelectorAll(".lineInput");
+  let lines = [];
+  inputs.forEach(function(inp) {
+    if (inp.value.trim() !== "") {
+      lines.push(inp.value.trim());
+    }
+  });
+
+  if (lines.length === 0) {
+    alert("কমপক্ষে একটি লাইন লিখুন");
+    return;
+  }
+
+  let text = lines.join("\n");
+
+  console.log(text);
+  console.log(JSON.stringify(text));
+  alert(JSON.stringify(text));
+
+  const newNotice = {
+    id: "local_" + Date.now(),
+    text: text,
+    createdAt: Date.now()
+  };
+
+  notices.unshift(newNotice);
+  localStorage.setItem("notice", JSON.stringify(notices));
+  showNotice();
+
+  try {
+    await addDoc(collection(db, "notice"), {
+      text: text,
+      createdAt: Date.now()
+    });
+    await loadNotice();
+  } catch(e) {
+    console.log("Offline Mode");
+  }
+
+  inputs.forEach(inp => inp.value = "");
+};
 </script>
 
 </body>
