@@ -132,6 +132,13 @@ function showNotice() {
 loadNotice();
 
 // Submit
+
+
+console.log(JSON.stringify(text));
+alert(JSON.stringify(text));
+
+
+  
 document.getElementById("submitNotice").onclick = async function() {
   // মেসেজ বক্স থেকে টেক্সট নেওয়া (innerText নতুন লাইনগুলোকে \n-এ রাখে)
   let box = document.getElementById("messageBox");
