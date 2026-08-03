@@ -1,2 +1,267 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-HELLO TEST
+<title>নোটিশ</title>
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f2f2f2;
+margin:15px;
+}
+
+h2{
+text-align:center;
+}
+
+textarea{
+width:100%;
+height:170px;
+font-size:18px;
+padding:10px;
+box-sizing:border-box;
+border:1px solid #888;
+border-radius:8px;
+resize:vertical;
+}
+
+button{
+margin-top:10px;
+padding:12px;
+width:100%;
+font-size:18px;
+background:green;
+color:white;
+border:none;
+border-radius:8px;
+}
+
+.notice{
+
+background:white;
+border:1px solid #ccc;
+border-radius:8px;
+padding:12px;
+margin-top:15px;
+white-space:pre-wrap;
+word-break:break-word;
+
+}
+
+.date{
+
+font-size:13px;
+color:#666;
+margin-top:8px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>📢 নতুন নোটিশ</h2>
+
+<textarea
+id="noticeInput"
+placeholder="এখানে নোটিশ লিখুন">
+</textarea>
+
+<button id="submitNotice">
+Submit
+</button>
+
+<hr>
+
+<div id="noticeList"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+
+initializeFirestore,
+persistentLocalCache,
+persistentSingleTabManager,
+
+collection,
+addDoc,
+getDocs,
+query,
+orderBy
+
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig={
+
+apiKey:"AIzaSyDhdamD0ApIaUeW0km2uSA7ksmGJO8f5Po",
+
+authDomain:"madrasa-fee-app.firebaseapp.com",
+
+projectId:"madrasa-fee-app",
+
+storageBucket:"madrasa-fee-app.firebasestorage.app",
+
+messagingSenderId:"1011327270340",
+
+appId:"1:1011327270340:web:b51a08befa3aafce4a7891",
+
+measurementId:"G-ZT4457XDKS"
+
+};
+
+const app=initializeApp(firebaseConfig);
+
+const db=initializeFirestore(app,{
+
+localCache:persistentLocalCache({
+
+tabManager:persistentSingleTabManager()
+
+})
+
+});
+
+let notices=[];
+
+
+
+// নোটিশ লোড
+async function loadNotice() {
+
+    const cache = localStorage.getItem("notice");
+
+    if (cache) {
+        notices = JSON.parse(cache);
+        showNotice();
+    }
+
+    if (navigator.onLine) {
+
+        const q = query(
+            collection(db, "notice"),
+            orderBy("createdAt", "desc")
+        );
+
+        const snapshot = await getDocs(q);
+
+        notices = [];
+
+        snapshot.forEach((doc) => {
+
+            notices.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+        localStorage.setItem(
+            "notice",
+            JSON.stringify(notices)
+        );
+
+        showNotice();
+
+    }
+
+}
+
+
+// নোটিশ দেখাবে
+function showNotice() {
+
+    let html = "";
+
+    notices.forEach(function(item){
+
+        let date = "";
+
+        if(item.createdAt){
+
+            date = new Date(item.createdAt)
+            .toLocaleString("bn-BD");
+
+        }
+
+        html += `
+<div class="notice">
+
+📢 ${item.text}
+
+<div class="date">
+
+${date}
+
+</div>
+
+</div>
+`;
+
+    });
+
+    document.getElementById("noticeList").innerHTML = html;
+
+}
+
+loadNotice();
+
+// Submit
+document.getElementById("submitNotice").onclick = async function () {
+
+    let text = document.getElementById("noticeInput").value;
+
+    if (text.trim() === "") {
+        alert("নোটিশ লিখুন");
+        return;
+    }
+
+    const newNotice = {
+        id: "local_" + Date.now(),
+        text: text,
+        createdAt: Date.now()
+    };
+
+    // আগে LocalStorage-এ সেভ
+    notices.unshift(newNotice);
+    localStorage.setItem("notice", JSON.stringify(notices));
+
+    // সঙ্গে সঙ্গে দেখাও
+    showNotice();
+
+    // Firebase-এ সেভ
+    try {
+
+        await addDoc(collection(db, "notice"), {
+            text: text,
+            createdAt: Date.now()
+        });
+
+        // Firebase থেকে আবার লোড
+        await loadNotice();
+
+    } catch (e) {
+
+        console.log("Offline Mode");
+
+    }
+
+    // ইনপুট খালি
+    document.getElementById("noticeInput").value = "";
+
+};
+
+</script>
+
+</body>
+</html>
+
+  
+  
